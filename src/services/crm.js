@@ -1,16 +1,17 @@
 const fetch = require('node-fetch');
 
 // Add lead to ClosingDealz CRM
-async function createLead(project, description, name, email, phone) {
-  const url = "https://app.closingdealz.io/api/v1/leads";
+async function createLead(company, notes, contactPerson, email, phoneNumber) {
+  // const url = "https://app.closingdealz.io/api/v1/leads";
+  const url = "http://localhost:5062/api/v1/leads";
   try {
     const reqData = [
       {
-        Company: project,
-        ContactPerson: name,
+        Company: company,
+        ContactPerson: contactPerson,
         Email: email,
-        PhoneNumber: phone,
-        Notes: `Lead generated from: ${process.env.CHATBOT_NAME}\n\nDescription:\n${description}`,
+        PhoneNumber: phoneNumber,
+        Notes: `Lead generated from: ${process.env.CHATBOT_NAME}\n\nDescription:\n${notes}`,
         Labels: [
             process.env.CHATBOT_NAME
         ]

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const crm = require('./services/crm');
+const assistant = require('./services/assistant');
 
 const hostname = process.env.HOSTNAME || "localhost";
 const port = process.env.PORT || 4069;
@@ -8,9 +9,11 @@ const port = process.env.PORT || 4069;
 const app = express();
 app.use(express.json());
 
-app.get('/', async (req, res) => {
-    res.json({ "test": "hello world" });
+app.post('/start-thread', async (req, res) => {
+    const thread = await assistant.startNewThread();
+    res.json({ "threadId": thread.id });
 });
+
 
 app.post('/lead', async (req, res) => {
     const data = req.body;
