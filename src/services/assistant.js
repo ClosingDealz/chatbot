@@ -133,7 +133,7 @@ async function createAssistant() {
                         },
                         "description": {
                             "type": "string",
-                            "description": "Brief description of the SaaS."
+                            "description": "Brief description of the SaaS and the conversation."
                         },
                         "name": {
                             "type": "string",
