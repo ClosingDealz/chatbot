@@ -63,14 +63,18 @@ async function chat(userInput, threadId) {
             for (const toolCall of event.data.required_action.submit_tool_outputs.tool_calls) {
                 if (toolCall.function.name === "createLead") {
                     const arguments = JSON.parse(toolCall.function.arguments);
-                    const output = await crm.createLead(
-                        arguments.project, arguments.description, arguments.name, arguments.email, arguments.phone, 
-                    );
+                    const output = await crm.createLead({
+                        company: arguments.project,
+                        contactPerson: arguments.name,
+                        notes: arguments.description,
+                        email: arguments.email,
+                        phoneNumber: arguments.phone
+                    });
 
                     await openAiClient.beta.threads.runs.submitToolOutputs(threadId, event.data.id, {
                         tool_outputs: [{
                             tool_call_id: toolCall.id,
-                            output: JSON.stringify(output)
+                            output: JSON.stringify(arguments)
                         }]
                     });
                 }
