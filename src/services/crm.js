@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-// Add lead to ClosingDealz CRM
+// Add lead to ClosingDealz CRM, for more info on ClosingDealz API, see: https://docs.closingdealz.io/developers/introduction-api
 async function createLead(company, notes, contactPerson, email, phoneNumber) {
   const url = "https://app.closingdealz.io/api/v1/leads";
   try {
@@ -16,6 +16,7 @@ async function createLead(company, notes, contactPerson, email, phoneNumber) {
         ]
       }
     ];
+
     const response = await fetch(url, {
       method: 'post',
       headers: {
@@ -35,7 +36,7 @@ async function createLead(company, notes, contactPerson, email, phoneNumber) {
     
     return resData.data;
   } catch (error) {
-    console.error(`Failed to create lead in ClosingDealz CRM: ${error}`);
+    console.error(`An error occured when creating a lead in ClosingDealz CRM: ${error}`);
     return null;
   }
 }

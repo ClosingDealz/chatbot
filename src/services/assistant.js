@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const path = require('path');
 const { OpenAI } = require('openai');
 const { assistantInstructions } = require("../prompts"); 
 const crm = require('./crm');
@@ -8,17 +9,28 @@ const openAiClient = new OpenAI({
 });
 
 let assistantId = null;
-(async () => { assistantId = await createAssistant(); })()
+async function init() {
+    console.log("Initializing the assistent...");
+    assistantId = await createAssistant();
+}
 
 async function startNewThread() {
-    console.log("Starting a new conversation...");
+    console.log("Starting a new thread...");
     const thread = await openAiClient.beta.threads.create();
     console.log(`New thread created with ID: ${thread.id}`);
+
     return thread;
 }
 
+const activeRuns = new Map();
 async function chat(userInput, threadId) {
-    console.log(`Received message: ${userInput} for thread ID: ${threadId}`);
+    console.log(`Received message: '${userInput}' in thread: ${threadId}`);
+
+    // Check if there's an active run in the thread.
+    if (activeRuns.has(threadId)) {
+        console.log(`A run is already active in thread ${threadId}. Waiting for it to complete.`);
+        return "Sorry, a conversation is already in progress. Please try again later.";
+    }
 
     await openAiClient.beta.threads.messages.create(threadId, {
         role: "user",
@@ -30,18 +42,31 @@ async function chat(userInput, threadId) {
         stream: true
     });
 
+    // Mark the thread as having an active run.
+    activeRuns.set(threadId, true);
+
+    console.log(`Waiting for run to complete in thread: ${threadId}`);
     for await (const event of runStream) {
-        console.log("Current status: " + event.data.status);
         if (event.data.status === 'completed') {
+            console.log(`Run successfully completed in thread ${threadId}`);
+            activeRuns.delete(threadId); // Mark the thread as no longer having an active run.
             break;
         }
+        else if (event.data.status === 'failed') {
+            console.log(`A Run error occured in thread ${threadId}`);
+            console.log(event);
+            return "Sorry, something went wrong, please try again.";
+        }
         else if (event.data.status === 'requires_action') {
+            console.log(`Function got picked up in thread ${threadId}`);
+
             for (const toolCall of event.data.required_action.submit_tool_outputs.tool_calls) {
                 if (toolCall.function.name === "createLead") {
                     const arguments = JSON.parse(toolCall.function.arguments);
                     const output = await crm.createLead(
                         arguments.project, arguments.description, arguments.name, arguments.email, arguments.phone, 
                     );
+
                     await openAiClient.beta.threads.runs.submitToolOutputs(threadId, event.data.id, {
                         tool_outputs: [{
                             tool_call_id: toolCall.id,
@@ -53,20 +78,26 @@ async function chat(userInput, threadId) {
         }
     }
 
+    // Get the messages in the thread, the latest message will be first.
     const threadMessages = await openAiClient.beta.threads.messages.list(threadId);
     const response = threadMessages.data[0].content[0].text.value;
   
-    console.log(`Assistant response: ${response}`);
+    console.log(`Assistant response in thread ${threadId}: ${response}`);
     return response;
 }
 
+// To avoid creating a new assistant every time the app starts. Save its ID to a file, then retrieve the ID each time the app starts.
+// If any changes are made to the assistant, e.g. model, a new assistant needs to be created. Delete the 'existing_assistant.json' file.
 async function createAssistant() {
     console.log("Creating assistant...");
-    const existingAssistantPath = '../existing_assistant_id.txt';
+    const existingAssistantPath = path.resolve(__dirname, '../existing_assistant.json');;
 
+    // Try load existing assistant info from file.
     if (fs.existsSync(existingAssistantPath)) {
-        console.log("Loaded existing assistant.");
-        return fs.readFileSync(existingAssistantPath, 'utf8');
+        const existingAssistant = require(existingAssistantPath);
+        console.log(`Loaded existing assistant with model ${existingAssistant.model}.`);
+        
+        return existingAssistant.id;
     }
     
     const knowledgeDocument = await fs.createReadStream("./knowledge.docx");
@@ -81,8 +112,9 @@ async function createAssistant() {
     });
 
     const assistant = await openAiClient.beta.assistants.create({
+        name: process.env.CHATBOT_NAME,
         instructions: assistantInstructions.trim(),
-        model: "gpt-3.5-turbo",
+        model: process.env.OPENAI_MODEL,
         tools: [
           {
             "type": "file_search"
@@ -124,13 +156,15 @@ async function createAssistant() {
         tool_resources: { file_search: { vector_store_ids: [vectorStore.id] } },
     });
 
-    await fs.writeFile(existingAssistantPath, assistant.id, (error) => {});
-    console.log("Succesfully create a new assistant.");
+    await fs.writeFile(existingAssistantPath, JSON.stringify({ id: assistant.id, model: assistant.model }), (error) => {});
+    console.log(`Create a new assistant with model ${assistant.model}.`);
+
     return assistant.id;
 }
 
 module.exports = {
-    startNewThread,
+    init,
     chat,
+    startNewThread,
     createAssistant
 };

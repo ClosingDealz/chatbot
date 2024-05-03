@@ -9,17 +9,11 @@ const port = process.env.PORT || 4069;
 const app = express();
 app.use(express.json());
 
+assistant.init();
+
 app.post('/start-thread', async (req, res) => {
     const thread = await assistant.startNewThread();
     res.json({ "threadId": thread.id });
-});
-
-
-app.post('/lead', async (req, res) => {
-    const data = req.body;
-    const response = await crm.createLead(data.project, data.description, data.name, data.email, data.phone);
-
-    res.json(response);
 });
 
 app.post('/chat', async (req, res) => {
@@ -28,12 +22,19 @@ app.post('/chat', async (req, res) => {
     const userInput = data.message || '';
   
     if (!threadId) {
-      console.error("Error: Missing threadId");
-      return res.status(400).json({ "error": "Missing threadId" });
+      console.error("Error: Missing 'threadId'");
+      return res.status(400).json({ "error": "Missing 'threadId'" });
     }
 
     const response = await assistant.chat(userInput, threadId);
     res.json({ "response": response });
+});
+
+app.post('/lead', async (req, res) => {
+    const data = req.body;
+    const response = await crm.createLead(data.project, data.description, data.name, data.email, data.phone);
+
+    res.json(response);
 });
 
 app.listen(port, () => {
