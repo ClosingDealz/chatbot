@@ -1,7 +1,7 @@
 const fs = require('node:fs');
-const { Configuration, OpenAI } = require('openai');
+const { OpenAI } = require('openai');
 const { assistantInstructions } = require("../prompts"); 
-const { cwd } = require('node:process');
+const crm = require('./crm');
 
 const openAiClient = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -12,18 +12,61 @@ let assistantId = null;
 
 async function startNewThread() {
     console.log("Starting a new conversation...");
-    const thread = await openAiClient.createChatThread();
+    const thread = await openAiClient.beta.threads.create();
     console.log(`New thread created with ID: ${thread.id}`);
     return thread;
 }
 
+async function chat(userInput, threadId) {
+    console.log(`Received message: ${userInput} for thread ID: ${threadId}`);
+
+    await openAiClient.beta.threads.messages.create(threadId, {
+        role: "user",
+        content: userInput
+    });
+
+    const runStream = await openAiClient.beta.threads.runs.create(threadId, {
+        assistant_id: assistantId,
+        stream: true
+    });
+
+    for await (const event of runStream) {
+        console.log("Current status: " + event.data.status);
+        if (event.data.status === 'completed') {
+            break;
+        }
+        else if (event.data.status === 'requires_action') {
+            for (const toolCall of event.data.required_action.submit_tool_outputs.tool_calls) {
+                if (toolCall.function.name === "createLead") {
+                    const arguments = JSON.parse(toolCall.function.arguments);
+                    const output = await crm.createLead(
+                        arguments.project, arguments.description, arguments.name, arguments.email, arguments.phone, 
+                    );
+                    await openAiClient.beta.threads.runs.submitToolOutputs(threadId, event.data.id, {
+                        tool_outputs: [{
+                            tool_call_id: toolCall.id,
+                            output: JSON.stringify(output)
+                        }]
+                    });
+                }
+            }
+        }
+    }
+
+    const threadMessages = await openAiClient.beta.threads.messages.list(threadId);
+    const response = threadMessages.data[0].content[0].text.value;
+  
+    console.log(`Assistant response: ${response}`);
+    return response;
+}
+
 async function createAssistant() {
-    console.log("Creating assistant.");
+    console.log("Creating assistant...");
     const existingAssistantPath = '../existing_assistant_id.txt';
 
     if (fs.existsSync(existingAssistantPath)) {
         console.log("Loaded existing assistant.");
-        return await fs.readFile(existingAssistantPath, { encoding: 'utf8' });
+        return fs.readFileSync(existingAssistantPath, 'utf8');
     }
     
     const knowledgeDocument = await fs.createReadStream("./knowledge.docx");
@@ -88,5 +131,6 @@ async function createAssistant() {
 
 module.exports = {
     startNewThread,
+    chat,
     createAssistant
 };

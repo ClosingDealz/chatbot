@@ -2,8 +2,7 @@ const fetch = require('node-fetch');
 
 // Add lead to ClosingDealz CRM
 async function createLead(company, notes, contactPerson, email, phoneNumber) {
-  // const url = "https://app.closingdealz.io/api/v1/leads";
-  const url = "http://localhost:5062/api/v1/leads";
+  const url = "https://app.closingdealz.io/api/v1/leads";
   try {
     const reqData = [
       {
@@ -34,10 +33,10 @@ async function createLead(company, notes, contactPerson, email, phoneNumber) {
       console.log(`Failed to create lead in ClosingDealz CRM. Message: ${resData.message}`);
     }
     
-    return [resData, null];
+    return resData.data;
   } catch (error) {
     console.error(`Failed to create lead in ClosingDealz CRM: ${error}`);
-    return [null, error];
+    return null;
   }
 }
   

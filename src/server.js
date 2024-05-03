@@ -22,6 +22,20 @@ app.post('/lead', async (req, res) => {
     res.json(response);
 });
 
+app.post('/chat', async (req, res) => {
+    const data = req.body;
+    const threadId = data.threadId;
+    const userInput = data.message || '';
+  
+    if (!threadId) {
+      console.error("Error: Missing threadId");
+      return res.status(400).json({ "error": "Missing threadId" });
+    }
+
+    const response = await assistant.chat(userInput, threadId);
+    res.json({ "response": response });
+});
+
 app.listen(port, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
 });
