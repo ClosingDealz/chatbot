@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+var crypto = require('crypto');
 const path = require('path');
 const { OpenAI } = require('openai');
 const { assistantInstructions } = require("../prompts"); 
@@ -99,19 +100,32 @@ async function chat(userInput, threadId) {
 }
 
 // To avoid creating a new assistant every time the app starts. Save its ID to a file, then retrieve the ID each time the app starts.
-// If any changes are made to the assistant, e.g. model, a new assistant needs to be created. Delete the 'existing_assistant.json' file.
+// A new assistant will automatically be created if the assistant name, instructions or model is changed.
+// If any changes are made to the knowledge.docx file or the assistant tools, the 'existing_assistant.json' file needs to be manually deleted. So a new assistant can be created.
 async function createAssistant() {
     console.log("Creating assistant...");
     const existingAssistantPath = path.resolve(__dirname, '../existing_assistant.json');;
 
+    const assistentConfigInfo = {
+        name: process.env.CHATBOT_NAME,
+        instructions: assistantInstructions.trim(),
+        model: process.env.OPENAI_MODEL
+    };
+    const configHash = crypto.createHash('md5').update(JSON.stringify(assistentConfigInfo)).digest('hex');
+
     // Try load existing assistant info from file.
     if (fs.existsSync(existingAssistantPath)) {
         const existingAssistant = require(existingAssistantPath);
-        console.log(`Loaded existing assistant with model ${existingAssistant.model}.`);
-        
-        return existingAssistant.id;
+        if (existingAssistant.configHash === configHash) {
+            console.log(`Loaded existing assistant with model ${existingAssistant.model}.`);
+            return existingAssistant.id;
+        }
+
+        console.log("Found an existing assistant, but some configurations has changed.");
     }
     
+    console.log("Creating a new assistant...");
+
     const knowledgeDocument = await fs.createReadStream("./knowledge.docx");
     const fileResponse = await openAiClient.files.create({
         file: knowledgeDocument,
@@ -124,9 +138,9 @@ async function createAssistant() {
     });
 
     const assistant = await openAiClient.beta.assistants.create({
-        name: process.env.CHATBOT_NAME,
-        instructions: assistantInstructions.trim(),
-        model: process.env.OPENAI_MODEL,
+        name: assistentConfigInfo.name,
+        instructions: assistentConfigInfo.instructions,
+        model: assistentConfigInfo.model,
         tools: [
           {
             "type": "file_search"
@@ -168,8 +182,8 @@ async function createAssistant() {
         tool_resources: { file_search: { vector_store_ids: [vectorStore.id] } },
     });
 
-    await fs.writeFile(existingAssistantPath, JSON.stringify({ id: assistant.id, model: assistant.model }), (error) => {});
-    console.log(`Create a new assistant with model ${assistant.model}.`);
+    await fs.writeFile(existingAssistantPath, JSON.stringify({ id: assistant.id, model: assistant.model, configHash: configHash }), (error) => {});
+    console.log(`Created a new assistant with model ${assistant.model}.`);
 
     return assistant.id;
 }
