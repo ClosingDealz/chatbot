@@ -11,7 +11,7 @@ async function createLead(lead) {
     const reqData = [
       {
         ...lead,
-        notes: `Lead generated from: ${process.env.CHATBOT_NAME}\n\nDescription:\n${lead.notes}`,
+        notes: `Lead generated from: ${process.env.CHATBOT_NAME}\n\nDescription:\n${lead.notes}`.substring(0, 6942),
         labels: [
             process.env.CHATBOT_NAME
         ]
