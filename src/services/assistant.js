@@ -2,9 +2,7 @@ const fs = require('node:fs');
 var crypto = require('crypto');
 const path = require('path');
 const { OpenAI } = require('openai');
-const { assistantInstructions } = require("../prompts");
-const { formatMessages } = require("../utils");
-const crm = require('./crm');
+const configuration = require("../configuration");
 
 const openAiClient = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -61,34 +59,32 @@ async function chat(userInput, threadId) {
             console.log(`Tool call got picked up in thread ${threadId}`);
 
             for (const toolCall of event.data.required_action.submit_tool_outputs.tool_calls) {
-                if (toolCall.function.name === "createLead") {
-                    const arguments = JSON.parse(toolCall.function.arguments);
+                const functionHandler = configuration.functionHandlers[toolCall.function.name];
+                if (!functionHandler) {
+                    console.log(`No function handler has been configured for function '${toolCall.function.name}'`);
+                    continue;
+                }
+                
+                // Get the messages up to this point, oldest first.
+                const threadMessages = await openAiClient.beta.threads.messages.list(threadId, { order: "asc" });
+                const messages = threadMessages.data.map(x => { 
+                    return { from: x.role, text: x.content[0].text.value.replace("\n\n", "\n") };
+                });
+                
+                const arguments = JSON.parse(toolCall.function.arguments);
+                
+                var output = await functionHandler(arguments, messages);
 
-                    // Get the messages up to this point, oldest first.
-                    const threadMessages = await openAiClient.beta.threads.messages.list(threadId, { order: "asc" });
-                    const messages = threadMessages.data.map(x => { 
-                        return { from: x.role, text: x.content[0].text.value.replace("\n\n", "\n") };
-                    });
+                const toolStream = await openAiClient.beta.threads.runs.submitToolOutputs(threadId, event.data.id, {
+                    tool_outputs: [{
+                        tool_call_id: toolCall.id,
+                        output: JSON.stringify(arguments)
+                    }],
+                    stream: true
+                });
 
-                    const output = await crm.createLead({
-                        company: arguments.project,
-                        contactPerson: arguments.name,
-                        notes: `${arguments.description}\n\nBudget:\n${arguments.budget}\n\nConversation:\n${formatMessages(messages)}`,
-                        email: arguments.email,
-                        phoneNumber: arguments.phone
-                    });
-
-                    const toolStream = await openAiClient.beta.threads.runs.submitToolOutputs(threadId, event.data.id, {
-                        tool_outputs: [{
-                            tool_call_id: toolCall.id,
-                            output: JSON.stringify(arguments)
-                        }],
-                        stream: true
-                    });
-
-                    // Wait for the stream to complete, then the run is complete and a response has been generated.
-                    for await (const toolEvent of toolStream) {
-                    }
+                // Wait for the stream to complete, then the run is complete and a response has been generated.
+                for await (const toolEvent of toolStream) {
                 }
             }
         }
@@ -116,7 +112,7 @@ async function createAssistant() {
 
     const assistentConfigInfo = {
         name: process.env.CHATBOT_NAME,
-        instructions: assistantInstructions.trim(),
+        instructions: configuration.assistantInstructions.trim(),
         model: process.env.OPENAI_MODEL
     };
     const configHash = crypto.createHash('md5').update(JSON.stringify(assistentConfigInfo)).digest('hex');
@@ -155,40 +151,9 @@ async function createAssistant() {
           },
           {
             "type": "function",
-            "function": {
-                "name": "createLead",
-                "description": "Capture lead details and save to ClosingDealz CRM.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "project": {
-                            "type": "string",
-                            "description": "Project name of the SaaS."
-                        },
-                        "description": {
-                            "type": "string",
-                            "description": "Brief description of the SaaS."
-                        },
-                        "budget": {
-                            "type": "string",
-                            "description": "Budget (USD) for the project."
-                        },
-                        "name": {
-                            "type": "string",
-                            "description": "Full name of the lead."
-                        },
-                        "email": {
-                            "type": "string",
-                            "description": "Email address of the lead."
-                        },
-                        "phone": {
-                            "type": "string",
-                            "description": "Phone number of the lead."
-                        }
-                    },
-                    "required": ["project", "description", "budget", "name", "email"]
-                }
-            }
+            "function": [
+                ...configuration.functions
+            ]
           }
         ],
         tool_resources: { file_search: { vector_store_ids: [vectorStore.id] } },

@@ -1,3 +1,6 @@
+const crm = require('./services/crm');
+const { formatMessages } = require("./utils");
+
 const assistantInstructions = `
 Assistant Role:
 The assistant acts as a lead generation specialist designed to capture leads interested in creating their own Software as a Service (SaaS). Its primary function is to capture the lead but also answer inquiries related to SaaS and CDZ Solutions offerings, specifically SaaS Development for startups.
@@ -26,6 +29,61 @@ The assistant should stay focused on the goal of lead capture and maintaining th
 Do not mention that the lead has been added to the CRM system once the assitant has gathered all the information, instead mention that we have gathered all the information we need and someone on the team will contact you soon.
 `;
 
+// Handlers for the functions defined in the functions variable below.
+const functionHandlers = {
+    "createLead": async (arguments, messages) => {
+        const notes = `Lead generated from:\n${process.env.CHATBOT_NAME}\n\nDescription:\n${arguments.description}\n\nBudget:\n${arguments.budget}\n\nConversation:\n${formatMessages(messages)}`;
+        const output = await crm.createLead({
+            company: arguments.project,
+            contactPerson: arguments.name,
+            notes: notes,
+            email: arguments.email,
+            phoneNumber: arguments.phone
+        });
+
+        return output;
+    }
+};
+
+const functions = [
+    {
+        "name": "createLead",
+        "description": "Capture lead details and save to ClosingDealz CRM.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "project": {
+                    "type": "string",
+                    "description": "Project name of the SaaS."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Brief description of the SaaS."
+                },
+                "budget": {
+                    "type": "string",
+                    "description": "Budget (USD) for the project."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Full name of the lead."
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Email address of the lead."
+                },
+                "phone": {
+                    "type": "string",
+                    "description": "Phone number of the lead."
+                }
+            },
+            "required": ["project", "description", "budget", "name", "email"]
+        }
+    }
+];
+
 module.exports = {
-  assistantInstructions
+  assistantInstructions,
+  functionHandlers,
+  functions
 };
