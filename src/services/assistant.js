@@ -73,7 +73,7 @@ async function chat(userInput, threadId) {
                     const output = await crm.createLead({
                         company: arguments.project,
                         contactPerson: arguments.name,
-                        notes: `${arguments.description}\n\nConversation:\n${formatMessages(messages)}`,
+                        notes: `${arguments.description}\n\nBudget:\n${arguments.budget}\n\nConversation:\n${formatMessages(messages)}`,
                         email: arguments.email,
                         phoneNumber: arguments.phone
                     });
@@ -169,6 +169,10 @@ async function createAssistant() {
                             "type": "string",
                             "description": "Brief description of the SaaS."
                         },
+                        "budget": {
+                            "type": "string",
+                            "description": "Budget (USD) for the project."
+                        },
                         "name": {
                             "type": "string",
                             "description": "Full name of the lead."
@@ -182,7 +186,7 @@ async function createAssistant() {
                             "description": "Phone number of the lead."
                         }
                     },
-                    "required": ["project", "description", "name", "email"]
+                    "required": ["project", "description", "budget", "name", "email"]
                 }
             }
           }
