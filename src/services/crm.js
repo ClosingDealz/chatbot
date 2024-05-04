@@ -29,7 +29,7 @@ async function createLead(lead) {
 
     const resData = await response.json();
 
-    if (resData.success) {
+    if (resData.succeeded) {
       console.log("Lead created successfully in ClosingDealz CRM.");
     } else {
       console.log(`Failed to create lead in ClosingDealz CRM. Message: ${resData.message}`);

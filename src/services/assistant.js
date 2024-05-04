@@ -49,16 +49,14 @@ async function chat(userInput, threadId) {
     for await (const event of runStream) {
         if (event.data.status === 'completed') {
             console.log(`Run successfully completed in thread ${threadId}`);
-            activeRuns.delete(threadId); // Mark the thread as no longer having an active run.
             break;
         }
         else if (event.data.status === 'failed') {
-            console.log(`A Run error occured in thread ${threadId}`);
-            console.log(event);
+            console.log(`A Run error occured in thread ${threadId}, Error Code: ${event.data.last_error.code} Message: ${event.data.last_error.message}`);
             return "Sorry, something went wrong, please try again.";
         }
         else if (event.data.status === 'requires_action') {
-            console.log(`Function got picked up in thread ${threadId}`);
+            console.log(`Tool call got picked up in thread ${threadId}`);
 
             for (const toolCall of event.data.required_action.submit_tool_outputs.tool_calls) {
                 if (toolCall.function.name === "createLead") {
@@ -71,19 +69,29 @@ async function chat(userInput, threadId) {
                         phoneNumber: arguments.phone
                     });
 
-                    await openAiClient.beta.threads.runs.submitToolOutputs(threadId, event.data.id, {
+                    const toolStream = await openAiClient.beta.threads.runs.submitToolOutputs(threadId, event.data.id, {
                         tool_outputs: [{
                             tool_call_id: toolCall.id,
                             output: JSON.stringify(arguments)
-                        }]
+                        }],
+                        stream: true
                     });
+
+                    // Wait for the stream to complete, then the run is complete and a response has been generated.
+                    for await (const toolEvent of toolStream) {
+                    }
                 }
             }
         }
     }
 
-    // Get the messages in the thread, the latest message will be first.
-    const threadMessages = await openAiClient.beta.threads.messages.list(threadId);
+    activeRuns.delete(threadId); // Mark the thread as no longer having an active run.
+
+    // Get the latest message in the thread, which will be the assistants response.
+    const threadMessages = await openAiClient.beta.threads.messages.list(threadId, {
+        order: "desc",
+        limit: 1
+    });
     const response = threadMessages.data[0].content[0].text.value;
   
     console.log(`Assistant response in thread ${threadId}: ${response}`);
