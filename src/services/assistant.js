@@ -2,7 +2,8 @@ const fs = require('node:fs');
 var crypto = require('crypto');
 const path = require('path');
 const { OpenAI } = require('openai');
-const { assistantInstructions } = require("../prompts"); 
+const { assistantInstructions } = require("../prompts");
+const { formatMessages } = require("../utils");
 const crm = require('./crm');
 
 const openAiClient = new OpenAI({
@@ -62,10 +63,17 @@ async function chat(userInput, threadId) {
             for (const toolCall of event.data.required_action.submit_tool_outputs.tool_calls) {
                 if (toolCall.function.name === "createLead") {
                     const arguments = JSON.parse(toolCall.function.arguments);
+
+                    // Get the messages up to this point, oldest first.
+                    const threadMessages = await openAiClient.beta.threads.messages.list(threadId, { order: "asc" });
+                    const messages = threadMessages.data.map(x => { 
+                        return { from: x.role, text: x.content[0].text.value.replace("\n\n", "\n") };
+                    });
+
                     const output = await crm.createLead({
                         company: arguments.project,
                         contactPerson: arguments.name,
-                        notes: arguments.description,
+                        notes: `${arguments.description}\n\nConversation:\n${formatMessages(messages)}`,
                         email: arguments.email,
                         phoneNumber: arguments.phone
                     });
@@ -159,7 +167,7 @@ async function createAssistant() {
                         },
                         "description": {
                             "type": "string",
-                            "description": "Brief description of the SaaS and the conversation."
+                            "description": "Brief description of the SaaS."
                         },
                         "name": {
                             "type": "string",
