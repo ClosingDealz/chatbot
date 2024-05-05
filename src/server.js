@@ -13,8 +13,14 @@ app.use(apiKeyProtection); // API key protection to all endpoints. Disable it in
 assistant.init();
 
 app.post('/start-thread', async (req, res) => {
-    const thread = await assistant.startNewThread();
-    res.json({ "threadId": thread.id });
+    try {
+        const thread = await assistant.startNewThread();
+        res.json({ "threadId": thread.id });
+    } catch (error) {
+        console.error("An error occurred when trying to start new thread.");
+        console.error(error);
+        res.status(500).json({ "error": "Failed to start new thread." });
+    }
 });
 
 app.post('/chat', async (req, res) => {
@@ -27,15 +33,27 @@ app.post('/chat', async (req, res) => {
       return res.status(400).json({ "error": "Missing 'threadId'" });
     }
 
-    const response = await assistant.chat(userInput, threadId);
-    res.json({ "response": response });
+    try {
+        const response = await assistant.chat(userInput, threadId);
+        res.json({ "response": response });
+    } catch (error) {
+        console.error("An error occurred when trying to create chat message.");
+        console.error(error);
+        res.status(500).json({ "error": "Failed to create chat message." });
+    }
 });
 
 app.post('/lead', async (req, res) => {
     const data = req.body;
-    const response = await crm.createLead(data);
 
-    res.json(response);
+    try {
+        const response = await crm.createLead(data);
+        res.json(response);
+    } catch (error) {
+        console.error("An error occurred when trying to create a lead.");
+        console.error(error);
+        res.status(500).json({ "error": "Failed to create new lead." });
+    }
 });
 
 app.listen(port, () => {
@@ -51,7 +69,7 @@ function apiKeyProtection(req, res, next) {
     const apiKey = req.get('X-API-Key');
     if (apiKey !== process.env.API_KEY) {
         console.log(`Unauthorized request was made to '${req.url}'`);
-        res.status(401).json({ message: "Invalid or missing API key." });
+        res.status(401).json({ "error": "Invalid or missing API key." });
         return;
     }
 
