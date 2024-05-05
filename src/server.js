@@ -32,7 +32,7 @@ app.post('/chat', async (req, res) => {
 
 app.post('/lead', async (req, res) => {
     const data = req.body;
-    const response = await crm.createLead(data.project, data.description, data.name, data.email, data.phone);
+    const response = await crm.createLead(data);
 
     res.json(response);
 });

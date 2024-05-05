@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-var crypto = require('crypto');
+const crypto = require('crypto');
 const path = require('path');
 const { OpenAI } = require('openai');
 const configuration = require("../configuration");
@@ -83,7 +83,7 @@ async function chat(userInput, threadId) {
                     stream: true
                 });
 
-                // Wait for the stream to complete, then the run is complete and a response has been generated.
+                // Wait for the stream to complete, then the run has completed and a response has been generated.
                 for await (const toolEvent of toolStream) {
                 }
             }
@@ -105,7 +105,7 @@ async function chat(userInput, threadId) {
 
 // To avoid creating a new assistant every time the app starts. Save its ID to a file, then retrieve the ID each time the app starts.
 // A new assistant will automatically be created if the assistant name, instructions or model is changed.
-// If any changes are made to the knowledge.docx file or the assistant tools, the 'existing_assistant.json' file needs to be manually deleted. So a new assistant can be created.
+// If any changes are made to the knowledge.docx file or the assistant tools, the 'existing_assistant.json' file needs to be manually deleted, so a new assistant can be created.
 async function createAssistant() {
     console.log("Creating assistant...");
     const existingAssistantPath = path.resolve(__dirname, '../existing_assistant.json');;

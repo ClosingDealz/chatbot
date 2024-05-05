@@ -1,5 +1,5 @@
 const crm = require('./services/crm');
-const { formatMessages } = require("./utils");
+const { formatMessages } = require("./services/utils");
 
 const assistantInstructions = `
 Assistant Role:
