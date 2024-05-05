@@ -8,6 +8,7 @@ const port = process.env.PORT || 4069;
 
 const app = express();
 app.use(express.json());
+app.use(apiKeyProtection); // API key protection to all endpoints. Disable it in config file.
 
 assistant.init();
 
@@ -40,3 +41,19 @@ app.post('/lead', async (req, res) => {
 app.listen(port, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
 });
+
+function apiKeyProtection(req, res, next) {
+    if (process.env.ENABLE_API_KEY == 'false') {
+        next();
+        return;
+    }
+
+    const apiKey = req.get('X-API-Key');
+    if (apiKey !== process.env.API_KEY) {
+        console.log(`Unauthorized request was made to '${req.url}'`);
+        res.status(401).json({ message: "Invalid or missing API key." });
+        return;
+    }
+
+    next();
+}
