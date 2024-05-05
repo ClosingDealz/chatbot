@@ -104,7 +104,7 @@ async function chat(userInput, threadId) {
 }
 
 // To avoid creating a new assistant every time the app starts. Save its ID to a file, then retrieve the ID each time the app starts.
-// A new assistant will automatically be created if the assistant name, instructions or model is changed.
+// A new assistant will automatically be created if the assistant name, instructions, model, temperature or top_p is changed.
 // If any changes are made to the knowledge.docx file or the assistant tools, the 'existing_assistant.json' file needs to be manually deleted, so a new assistant can be created.
 async function createAssistant() {
     console.log("Creating assistant...");
@@ -113,7 +113,9 @@ async function createAssistant() {
     const assistentConfigInfo = {
         name: process.env.CHATBOT_NAME,
         instructions: configuration.assistantInstructions.trim(),
-        model: process.env.OPENAI_MODEL
+        model: process.env.OPENAI_MODEL || "gpt-4-turbo",
+        temperature: Number(process.env.OPENAI_TEMPERATURE || 1),
+        top_p: Number(process.env.OPENAI_TOP_P || 1)
     };
     const configHash = crypto.createHash('md5').update(JSON.stringify(assistentConfigInfo)).digest('hex');
 
@@ -141,20 +143,25 @@ async function createAssistant() {
         file_ids: [fileResponse.id]
     });
 
+    const functions = configuration.functions.map(func => {
+        return {
+            "type": "function",
+            "function": func
+        }
+    });
+
+    // See all configurations here: https://platform.openai.com/docs/api-reference/assistants/createAssistant
     const assistant = await openAiClient.beta.assistants.create({
         name: assistentConfigInfo.name,
         instructions: assistentConfigInfo.instructions,
         model: assistentConfigInfo.model,
+        temperature: assistentConfigInfo.temperature,
+        top_p: assistentConfigInfo.top_p,
         tools: [
           {
             "type": "file_search"
           },
-          {
-            "type": "function",
-            "function": [
-                ...configuration.functions
-            ]
-          }
+          ...functions
         ],
         tool_resources: { file_search: { vector_store_ids: [vectorStore.id] } },
     });

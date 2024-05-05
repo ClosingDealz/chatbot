@@ -29,22 +29,9 @@ The assistant should stay focused on the goal of lead capture and maintaining th
 Do not mention that the lead has been added to the CRM system once the assitant has gathered all the information, instead mention that we have gathered all the information we need and someone on the team will contact you soon.
 `;
 
-// Handlers for the functions defined in the functions variable below.
-const functionHandlers = {
-    "createLead": async (arguments, messages) => {
-        const notes = `Lead generated from:\n${process.env.CHATBOT_NAME}\n\nDescription:\n${arguments.description}\n\nBudget:\n${arguments.budget}\n\nConversation:\n${formatMessages(messages)}`;
-        const output = await crm.createLead({
-            company: arguments.project,
-            contactPerson: arguments.name,
-            notes: notes,
-            email: arguments.email,
-            phoneNumber: arguments.phone
-        });
-
-        return output;
-    }
-};
-
+// Functions defines the information the assistant should try to capture during the conversation.
+// The logic to run is defined in the 'functionHandlers' valiable below. The name of the function needs to match the handler.
+// For more information about functions, see: https://platform.openai.com/docs/guides/function-calling
 const functions = [
     {
         "name": "createLead",
@@ -81,6 +68,23 @@ const functions = [
         }
     }
 ];
+
+// Maps function names to their respective handler, defining actions to be executed when these functions are called by the assistant.
+const functionHandlers = {
+    "createLead": async (arguments, messages) => {
+        const notes = `Lead generated from:\n${process.env.CHATBOT_NAME}\n\nDescription:\n${arguments.description}\n\nBudget:\n${arguments.budget}\n\nConversation:\n${formatMessages(messages)}`;
+        
+        const output = await crm.createLead({
+            company: arguments.project,
+            contactPerson: arguments.name,
+            notes: notes,
+            email: arguments.email,
+            phoneNumber: arguments.phone
+        });
+
+        return output;
+    }
+};
 
 module.exports = {
   assistantInstructions,
