@@ -1,6 +1,10 @@
 const crm = require('./services/crm');
 const { formatMessages } = require("./services/utils");
 
+// Instructions for the assistant detailing its role, objectives, and steps to capture leads effectively.
+// It's important to inform the assistant about the knowledge.docx file and its utilization, as well as when to trigger specific functions.
+// Example:
+// Once all required information is collected, the assistant should immediately add the lead to the ClosingDealz CRM via the createLead function.
 const assistantInstructions = `
 Assistant Role:
 The assistant acts as a lead generation specialist designed to capture leads interested in creating their own Software as a Service (SaaS). Its primary function is to capture the lead but also answer inquiries related to SaaS and CDZ Solutions offerings, specifically SaaS Development for startups.
@@ -26,11 +30,11 @@ Once the CRM entry is made, the assistant should end the interaction without any
 
 Additional Guidelines:
 The assistant should stay focused on the goal of lead capture and maintaining the conversation strictly within the realms of SaaS and the services offered by CDZ Solutions.
-Do not mention that the lead has been added to the CRM system once the assitant has gathered all the information, instead mention that we have gathered all the information we need and someone on the team will contact you soon.
+Do not mention that the lead has been added to the CRM system once the assistant has gathered all the information, instead mention that we have gathered all the information we need and someone on the team will contact you soon.
 `;
 
 // Functions defines the information the assistant should try to capture during the conversation.
-// The logic to run is defined in the 'functionHandlers' valiable below. The name of the function needs to match the handler.
+// The logic to run is defined in the 'functionHandlers' variable below. The name of the function needs to match the handler.
 // For more information about functions, see: https://platform.openai.com/docs/guides/function-calling
 const functions = [
     {
@@ -70,10 +74,13 @@ const functions = [
 ];
 
 // Maps function names to their respective handler, defining actions to be executed when these functions are called by the assistant.
+// 'arguments' represent all the properies the assistant captured, these properties is defined in the function above.
+// 'messages' is the latest 20 messages exchanged between the user and the assistant, with the last message being from the user that triggered the function. Messages are in ascending order (oldest first).
 const functionHandlers = {
     "createLead": async (arguments, messages) => {
         const notes = `Lead generated from:\n${process.env.CHATBOT_NAME}\n\nDescription:\n${arguments.description}\n\nBudget:\n${arguments.budget}\n\nConversation:\n${formatMessages(messages)}`;
         
+        // See all available fields in the lead object here: https://docs.closingdealz.io/developers/api-endpoints/lead-request-object
         const output = await crm.createLead({
             company: arguments.project,
             contactPerson: arguments.name,

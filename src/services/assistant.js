@@ -10,7 +10,7 @@ const openAiClient = new OpenAI({
 
 let assistantId = null;
 async function init() {
-    console.log("Initializing the assistent...");
+    console.log("Initializing the assistant...");
     assistantId = await createAssistant();
 }
 
@@ -52,7 +52,7 @@ async function chat(userInput, threadId) {
             break;
         }
         else if (event.data.status === 'failed') {
-            console.log(`A Run error occured in thread ${threadId}, Error Code: ${event.data.last_error.code} Message: ${event.data.last_error.message}`);
+            console.log(`A Run error occurred in thread ${threadId}, Error Code: ${event.data.last_error.code} Message: ${event.data.last_error.message}`);
             return "Sorry, something went wrong, please try again.";
         }
         else if (event.data.status === 'requires_action') {
@@ -110,14 +110,14 @@ async function createAssistant() {
     console.log("Creating assistant...");
     const existingAssistantPath = path.resolve(__dirname, '../existing_assistant.json');;
 
-    const assistentConfigInfo = {
+    const assistantConfigInfo = {
         name: process.env.CHATBOT_NAME,
         instructions: configuration.assistantInstructions.trim(),
         model: process.env.OPENAI_MODEL || "gpt-4-turbo",
         temperature: Number(process.env.OPENAI_TEMPERATURE || 1),
         top_p: Number(process.env.OPENAI_TOP_P || 1)
     };
-    const configHash = crypto.createHash('md5').update(JSON.stringify(assistentConfigInfo)).digest('hex');
+    const configHash = crypto.createHash('md5').update(JSON.stringify(assistantConfigInfo)).digest('hex');
 
     // Try load existing assistant info from file.
     if (fs.existsSync(existingAssistantPath)) {
@@ -152,11 +152,11 @@ async function createAssistant() {
 
     // See all configurations here: https://platform.openai.com/docs/api-reference/assistants/createAssistant
     const assistant = await openAiClient.beta.assistants.create({
-        name: assistentConfigInfo.name,
-        instructions: assistentConfigInfo.instructions,
-        model: assistentConfigInfo.model,
-        temperature: assistentConfigInfo.temperature,
-        top_p: assistentConfigInfo.top_p,
+        name: assistantConfigInfo.name,
+        instructions: assistantConfigInfo.instructions,
+        model: assistantConfigInfo.model,
+        temperature: assistantConfigInfo.temperature,
+        top_p: assistantConfigInfo.top_p,
         tools: [
           {
             "type": "file_search"

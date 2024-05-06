@@ -56,8 +56,8 @@ app.post('/lead', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+app.listen(port, hostname, () => {
+    console.log(`Server running at: http://${hostname}:${port}`);
 });
 
 function apiKeyProtection(req, res, next) {
