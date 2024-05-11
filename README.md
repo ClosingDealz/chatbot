@@ -1,5 +1,27 @@
-# CDZ - The Lead Capture Chatbot
-This chatbot is an innovative solution designed to transform your website into a powerful lead generation tool. Integrated seamlessly into your site, this chatbot engages visitors through interactive conversations, effectively capturing leads and funneling them directly into the ClosingDealz CRM. By automating lead capture, our chatbot helps streamline your sales process, ensuring no potential customer goes unnoticed.
+<div align="center">
+  <h1>CDZ - Lead Capture Chatbot</h1>
+</div>
+
+![image](https://github.com/ClosingDealz/chatbot/assets/54490104/3656caf1-9f48-4618-8728-236a1d5309dc)
+
+<p align="center">
+  Integrate this chatbot seamlessly into your website to engage visitors, capture leads, and streamline your sales process. By automating lead capture, it ensures that no potential customer goes unnoticed. The chatbot interacts with visitors through interactive conversations, effectively transforming your website into a powerful lead generation tool.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Abooow/Paia/network/members/" alt="Forks">
+    <img src="https://img.shields.io/github/forks/ClosingDealz/chatbot?style=flat-square" />
+  </a>
+  <a href="https://github.com/Abooow/Paia/stargazers/" alt="Stars">
+    <img src="https://img.shields.io/github/stars/ClosingDealz/chatbot?style=flat-square" />
+  </a>
+  <a href="https://github.com/Abooow/Paia/graphs/contributors" alt="Contributors">
+    <img src="https://img.shields.io/github/contributors/ClosingDealz/chatbot?style=flat-square" />
+  </a>
+  <a href="LICENSE" alt="License">
+    <img src="https://img.shields.io/github/license/ClosingDealz/chatbot?style=flat-square" />
+  </a>
+</p>
 
 ## Table of Contents 
 - [Usage](#usage)
@@ -12,6 +34,9 @@ This chatbot is an innovative solution designed to transform your website into a
     - [Assistant Knowledge Base](#assistant-knowledge-base)
   - [Starting the Server](#starting-the-server)
     - [Available Endpoints](#available-endpoints)
+- [License](#license)
+
+<br>
 
 ## Usage
 
@@ -59,11 +84,11 @@ Edit these configurations to suit your needs.
 #### Obtaining API Keys
 This chatbot requires a ClozingDealz and OpenAI API key to work. Paste your API keys in the `.env` file.
 
-[ClosingDealz](https://closingdealz.io) is used as the CRM tool to store all the leads, follow [this link](https://docs.closingdealz.io/developers/obtaining-api-key) to get a API key.
+[ClosingDealz](https://closingdealz.io) is used as the CRM tool to store all the leads. Follow [this link to get a ClosingDealz API key](https://docs.closingdealz.io/developers/obtaining-api-key).
 
-OpenAI is the brain of the chatbot, follow [this link](https://platform.openai.com/docs/quickstart/account-setup) to get a API key.
+OpenAI is used to generate responses for the chatbot. Follow [this link to get an OpenAI API key](https://platform.openai.com/docs/quickstart/account-setup).
 
-An account has to be created for both of these. 
+*An account has to be created for both of these.*
 
 #### Server Protection Using API Keys
 You can protect your server using your own API keys when making requests by setting `ENABLE_API_KEY` to true. A `X-API-Key` header needs to be added to the requests with the value of `API_KEY`.
@@ -98,8 +123,6 @@ The server should be accessible at: [http://localhost:4069](http://localhost:406
 
 
 #### Available Endpoints
-If `ENABLE_API_KEY` is enabled, a `X-API-Key` header needs to be added when making requests. The value should be whatever was set in `API_KEY`.
-
 `POST /start-thread` is used to start a new thread with the chatbot. A thread id will be returned that can be used to chat in the thread.
 
 `POST /chat` is used to chat with the chatbot. A thread id is required. Example request body:
@@ -109,3 +132,12 @@ If `ENABLE_API_KEY` is enabled, a `X-API-Key` header needs to be added when maki
   "message": "Hello!"
 }
 ```
+
+`POST /lead` for manually creating a new lead. See all available request properties [here](https://docs.closingdealz.io/developers/api-endpoints/lead-request-object).
+
+> If `ENABLE_API_KEY` is enabled, a `X-API-Key` header needs to be added when making requests. The value should be whatever was set in `API_KEY`.
+
+<br>
+
+## License
+This project has been released under the MIT license. More information can be found by viewing the license [here](LICENSE).
