@@ -43,19 +43,6 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-app.post('/lead', async (req, res) => {
-    const data = req.body;
-
-    try {
-        const response = await crm.createLead(data);
-        res.json(response);
-    } catch (error) {
-        console.error("An error occurred when trying to create a lead.");
-        console.error(error);
-        res.status(500).json({ "error": "Failed to create new lead." });
-    }
-});
-
 app.listen(port, hostname, () => {
     console.log(`Server running at: http://${hostname}:${port}`);
 });

@@ -102,7 +102,9 @@ You can configure the instructions and functions for the assistant in the [confi
 
 To avoid creating a new assistant every time the app starts, a `existing_assistant.json` file will be created. This file contains the OpenAI assistant id, and will be reused every time the app starts.
 
-If any changes are made to the assistant, such as **assistant name**, **instructions**, **model**, **temperature** or **top_p**, a new assistant will be created automatically. But changes to the **knowledge.docx** file or any **assistant tools** will not cause a new assistant to be created. In this case: the `existing_assistant.json` needs to be deleted manully, so a new assistant can be created with the new changes.
+If any changes are made to the assistant, such as **assistant name**, **instructions**, **model**, **knowledge.docx file**, **tools**, **temperature** or **top_p**, a new assistant will be created automatically.
+
+Force a new assistant to be created by deleting the `existing_assistant.json` file manually.
 
 #### Assistant Knowledge Base
 The knowledge file for the assistant is located in `src/knowledge.docx`. This file is used to effectively answer queries, replace this document for your needs.

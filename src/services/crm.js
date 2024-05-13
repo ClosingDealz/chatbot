@@ -2,8 +2,7 @@ const fetch = require('node-fetch');
 
 // Add lead to ClosingDealz CRM, for more info on the lead object, see: https://docs.closingdealz.io/developers/api-endpoints/lead-request-object
 async function createLead(lead) {
-  //const url = "https://app.closingdealz.io/api/v1/leads";
-  const url = "http://localhost:5062/api/v1/leads";
+  const url = "https://app.closingdealz.io/api/v1/leads";
   try {
     lead.notes = lead.notes?.trim().substring(0, 6942);
     const reqData = [

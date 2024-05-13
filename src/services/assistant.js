@@ -104,8 +104,8 @@ async function chat(userInput, threadId) {
 }
 
 // To avoid creating a new assistant every time the app starts. Save its ID to a file, then retrieve the ID each time the app starts.
-// A new assistant will automatically be created if the assistant name, instructions, model, temperature or top_p is changed.
-// If any changes are made to the knowledge.docx file or the assistant tools, the 'existing_assistant.json' file needs to be manually deleted, so a new assistant can be created.
+// A new assistant will automatically be created if the assistant name, instructions, model, knowledge.docx file, tools, temperature or top_p is changed.
+// Force a new assistant to be created by deleting the 'existing_assistant.json' file manually.
 async function createAssistant() {
     console.log("Creating assistant...");
     const existingAssistantPath = path.resolve(__dirname, '../existing_assistant.json');;
@@ -114,17 +114,27 @@ async function createAssistant() {
         name: process.env.CHATBOT_NAME,
         instructions: configuration.assistantInstructions.trim(),
         model: process.env.OPENAI_MODEL || "gpt-4-turbo",
+        functions: JSON.stringify(configuration.functions),
         temperature: Number(process.env.OPENAI_TEMPERATURE || 1),
         top_p: Number(process.env.OPENAI_TOP_P || 1)
     };
+
     const configHash = crypto.createHash('md5').update(JSON.stringify(assistantConfigInfo)).digest('hex');
+    const knowledgeDocument = await fs.createReadStream("./knowledge.docx");
+    const fileBuffer = fs.readFileSync('./knowledge.docx');
+    const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+    let storeId = null;
 
     // Try load existing assistant info from file.
     if (fs.existsSync(existingAssistantPath)) {
         const existingAssistant = require(existingAssistantPath);
-        if (existingAssistant.configHash === configHash) {
+        if (existingAssistant.configHash === configHash && existingAssistant.fileHash === fileHash) {
             console.log(`Loaded existing assistant with model ${existingAssistant.model}.`);
             return existingAssistant.id;
+        }
+
+        if (existingAssistant.fileHash === fileHash) {
+            storeId = existingAssistant.storeId;
         }
 
         console.log("Found an existing assistant, but some configurations has changed.");
@@ -132,16 +142,20 @@ async function createAssistant() {
     
     console.log("Creating a new assistant...");
 
-    const knowledgeDocument = await fs.createReadStream("./knowledge.docx");
-    const fileResponse = await openAiClient.files.create({
-        file: knowledgeDocument,
-        purpose: 'assistants',
-    });
+    // Don't upload the knowledge base if it wasn't changed.
+    if (!storeId) {
+        const fileResponse = await openAiClient.files.create({
+            file: knowledgeDocument,
+            purpose: 'assistants',
+        });
+        
+        const vectorStore = await openAiClient.beta.vectorStores.create({
+            name: "Knowledge",
+            file_ids: [fileResponse.id]
+        });
 
-    const vectorStore = await openAiClient.beta.vectorStores.create({
-        name: "Knowledge",
-        file_ids: [fileResponse.id]
-    });
+        storeId = vectorStore.id;
+    }
 
     const functions = configuration.functions.map(func => {
         return {
@@ -163,10 +177,17 @@ async function createAssistant() {
           },
           ...functions
         ],
-        tool_resources: { file_search: { vector_store_ids: [vectorStore.id] } },
+        tool_resources: { file_search: { vector_store_ids: [storeId] } },
     });
 
-    await fs.writeFile(existingAssistantPath, JSON.stringify({ id: assistant.id, model: assistant.model, configHash: configHash }), (error) => {});
+    const assistantData = {
+        id: assistant.id,
+        model: assistant.model,
+        configHash: configHash,
+        fileHash: fileHash,
+        storeId: storeId
+    };
+    await fs.writeFile(existingAssistantPath, JSON.stringify(assistantData), (error) => {});
     console.log(`Created a new assistant with model ${assistant.model}.`);
 
     return assistant.id;
