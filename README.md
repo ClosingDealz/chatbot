@@ -121,7 +121,7 @@ or
 > node server.js
 ```
 
-The server should be accessible at: [http://localhost:4069](http://localhost:4069)
+The server should be accessible at: [http://127.0.0.1:4069](http://127.0.0.1:4069)
 
 
 #### Available Endpoints

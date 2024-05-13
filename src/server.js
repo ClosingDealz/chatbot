@@ -3,7 +3,7 @@ const express = require('express');
 const crm = require('./services/crm');
 const assistant = require('./services/assistant');
 
-const hostname = process.env.HOSTNAME || "localhost";
+const hostname = process.env.HOSTNAME || "127.0.0.1";
 const port = process.env.PORT || 4069;
 
 const app = express();

@@ -120,11 +120,10 @@ async function createAssistant() {
     };
 
     const configHash = crypto.createHash('md5').update(JSON.stringify(assistantConfigInfo)).digest('hex');
-    const knowledgeDocument = await fs.createReadStream("./knowledge.docx");
     const fileBuffer = fs.readFileSync('./knowledge.docx');
     const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
     let storeId = null;
-
+    
     // Try load existing assistant info from file.
     if (fs.existsSync(existingAssistantPath)) {
         const existingAssistant = require(existingAssistantPath);
@@ -132,18 +131,19 @@ async function createAssistant() {
             console.log(`Loaded existing assistant with model ${existingAssistant.model}.`);
             return existingAssistant.id;
         }
-
+        
         if (existingAssistant.fileHash === fileHash) {
             storeId = existingAssistant.storeId;
         }
-
+        
         console.log("Found an existing assistant, but some configurations has changed.");
     }
     
     console.log("Creating a new assistant...");
-
+    
     // Don't upload the knowledge base if it wasn't changed.
     if (!storeId) {
+        const knowledgeDocument = await fs.createReadStream("./knowledge.docx");
         const fileResponse = await openAiClient.files.create({
             file: knowledgeDocument,
             purpose: 'assistants',
