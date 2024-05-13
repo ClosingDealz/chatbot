@@ -9,13 +9,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Abooow/Paia/network/members/" alt="Forks">
+  <a href="https://github.com/ClosingDealz/chatbot/network/members/" alt="Forks">
     <img src="https://img.shields.io/github/forks/ClosingDealz/chatbot?style=flat-square" />
   </a>
-  <a href="https://github.com/Abooow/Paia/stargazers/" alt="Stars">
+  <a href="https://github.com/ClosingDealz/chatbot/stargazers/" alt="Stars">
     <img src="https://img.shields.io/github/stars/ClosingDealz/chatbot?style=flat-square" />
   </a>
-  <a href="https://github.com/Abooow/Paia/graphs/contributors" alt="Contributors">
+  <a href="https://github.com/ClosingDealz/chatbot/graphs/contributors" alt="Contributors">
     <img src="https://img.shields.io/github/contributors/ClosingDealz/chatbot?style=flat-square" />
   </a>
   <a href="LICENSE" alt="License">
@@ -36,7 +36,6 @@
     - [Available Endpoints](#available-endpoints)
 - [License](#license)
 
-<br>
 
 ## Usage
 
@@ -49,7 +48,6 @@ or download it as a [zip-file](https://github.com/ClosingDealz/chatbot/archive/r
 
 Once cloned/downloaded, navigate to the `src` directory.
 
-<br>
 
 ### Getting Started
 This project requires node version 20 or later. [Download Node.js here](https://nodejs.org/en/download)
@@ -59,7 +57,6 @@ Install all npm dependencies.
 > npm install
 ```
 
-<br>
 
 ### Configure Environment Variables
 Copy the [.env.example](/src/.env.example) file and name it `.env`.
@@ -95,7 +92,6 @@ You can protect your server using your own API keys when making requests by sett
 
 `API_KEY` can be of any value you'd like, but it's recommended to be a random string or `UUID` thats at least 12 characters long.
 
-<br>
 
 ### Configure the Chatbot
 You can configure the instructions and functions for the assistant in the [configuration.js](src/configuration.js) file.
@@ -109,7 +105,6 @@ Force a new assistant to be created by deleting the `existing_assistant.json` fi
 #### Assistant Knowledge Base
 The knowledge file for the assistant is located in `src/knowledge.docx`. This file is used to effectively answer queries, replace this document for your needs.
 
-<br>
 
 ### Starting the Server
 Start the server by typing.
@@ -134,8 +129,6 @@ The server should be accessible at: [http://127.0.0.1:4069](http://127.0.0.1:406
   "message": "Hello!"
 }
 ```
-
-`POST /lead` for manually creating a new lead. See all available request properties [here](https://docs.closingdealz.io/developers/api-endpoints/lead-request-object).
 
 > If `ENABLE_API_KEY` is enabled, a `X-API-Key` header needs to be added when making requests. The value should be whatever was set in `API_KEY`.
 
