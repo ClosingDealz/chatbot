@@ -9,17 +9,17 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ClosingDealz/chatbot/network/members/" alt="Forks">
-    <img src="https://img.shields.io/github/forks/ClosingDealz/chatbot?style=flat-square" />
+  <a href="https://github.com/ClosingDealz/chatbot/network/members/">
+    <img src="https://img.shields.io/github/forks/ClosingDealz/chatbot?style=flat-square&logo=github" alt="Forks" />
   </a>
-  <a href="https://github.com/ClosingDealz/chatbot/stargazers/" alt="Stars">
-    <img src="https://img.shields.io/github/stars/ClosingDealz/chatbot?style=flat-square" />
+  <a href="https://github.com/ClosingDealz/chatbot/stargazers/">
+    <img src="https://img.shields.io/github/stars/ClosingDealz/chatbot?style=flat-square&logo=github" alt="Stars" />
   </a>
-  <a href="https://github.com/ClosingDealz/chatbot/graphs/contributors" alt="Contributors">
-    <img src="https://img.shields.io/github/contributors/ClosingDealz/chatbot?style=flat-square" />
+  <a href="https://github.com/ClosingDealz/chatbot/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/ClosingDealz/chatbot?style=flat-square&logo=github" alt="Contributors" />
   </a>
-  <a href="LICENSE" alt="License">
-    <img src="https://img.shields.io/github/license/ClosingDealz/chatbot?style=flat-square" />
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/ClosingDealz/chatbot?style=flat-square" alt="License" />
   </a>
 </p>
 
@@ -132,7 +132,6 @@ The server should be accessible at: [http://127.0.0.1:4069](http://127.0.0.1:406
 
 > If `ENABLE_API_KEY` is enabled, a `X-API-Key` header needs to be added when making requests. The value should be whatever was set in `API_KEY`.
 
-<br>
 
 ## License
 This project has been released under the MIT license. More information can be found by viewing the license [here](LICENSE).
